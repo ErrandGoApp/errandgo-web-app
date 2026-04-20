@@ -1963,17 +1963,17 @@ function DetailsPage({
   const entity = useMemo<Entity | null>(() => {
     switch (details.entityType) {
       case "escrow":
-        return escrows.find((item) => item.id === details.entityId) || null;
+        return escrows.find((e) => e.id === details.entityId) || null;
       case "trade":
-        return trades.find((item) => item.id === details.entityId) || null;
+        return trades.find((e) => e.id === details.entityId) || null;
       case "milestone":
-        return milestones.find((item) => item.id === details.entityId) || null;
+        return milestones.find((e) => e.id === details.entityId) || null;
       case "payment":
-        return payments.find((item) => item.id === details.entityId) || null;
+        return payments.find((e) => e.id === details.entityId) || null;
       case "request":
-        return requests.find((item) => item.id === details.entityId) || null;
+        return requests.find((e) => e.id === details.entityId) || null;
       case "ramp":
-        return rampFlows.find((item) => item.id === details.entityId) || null;
+        return rampFlows.find((e) => e.id === details.entityId) || null;
       default:
         return null;
     }
