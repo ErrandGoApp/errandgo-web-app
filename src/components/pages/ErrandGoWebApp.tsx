@@ -43,7 +43,7 @@ const navItems = [
   { id: "requests", label: "Requests", icon: Briefcase },
   { id: "activity", label: "Activity", icon: FileClock },
   { id: "settings", label: "Settings", icon: Settings },
-];
+] as const;
 
 type WorkspaceView =
   | "overview"
@@ -124,7 +124,35 @@ type RampFlow = {
   reference: string;
 };
 
+type RampAccount = {
+  id: string;
+  label: string;
+  balance: number;
+  available: number;
+  currency: string;
+  rail: string;
+};
+
+type ActivityItem = {
+  id: number;
+  text: string;
+  time: string;
+  tone: "success" | "default";
+};
+
 type Entity = Escrow | Trade | Milestone | Payment | RequestItem | RampFlow;
+
+type ActionTuple = [
+  string,
+  React.ComponentType<{ className?: string }>,
+  string
+];
+
+type CategoryTuple = [
+  string,
+  React.ComponentType<{ className?: string }>,
+  string
+];
 
 function isEscrow(entity: Entity): entity is Escrow {
   return (
@@ -152,7 +180,7 @@ function isRampFlow(entity: Entity): entity is RampFlow {
   return "reference" in entity && "eta" in entity && "receiveAmount" in entity;
 }
 
-const initialRampAccounts = [
+const initialRampAccounts: RampAccount[] = [
   {
     id: "BAL-USD",
     label: "USD Wallet",
@@ -339,7 +367,7 @@ const initialRequests: RequestItem[] = [
   },
 ];
 
-const initialActivity = [
+const initialActivity: ActivityItem[] = [
   {
     id: 1,
     text: "Payment funded for ESC-1042",
@@ -359,6 +387,45 @@ const initialActivity = [
     time: "3h ago",
     tone: "default",
   },
+];
+
+const overviewQuickActions: ActionTuple[] = [
+  ["New escrow", ShieldCheck, "newEscrow"],
+  ["New trade", RefreshCcw, "newTrade"],
+  ["Milestone plan", Layers3, "newMilestone"],
+  ["Request payment", HandCoins, "newPayment"],
+];
+
+const paymentActions: ActionTuple[] = [
+  ["Request payment", HandCoins, "newPayment"],
+  ["Fund escrow", ShieldCheck, "newEscrow"],
+  ["Release milestone", Layers3, "newMilestone"],
+  ["Create trade", RefreshCcw, "newTrade"],
+  ["Start onramp", CircleDollarSign, "newOnramp"],
+  ["Start offramp", Wallet, "newOfframp"],
+];
+
+const requestCategories: CategoryTuple[] = [
+  [
+    "Errand request",
+    Truck,
+    "Create local task flows with protected payment terms.",
+  ],
+  [
+    "Shopping request",
+    Store,
+    "Manage assisted purchases with clearer settlement terms.",
+  ],
+  [
+    "Service request",
+    Briefcase,
+    "Turn service agreements into escrow or milestone workflows.",
+  ],
+  [
+    "Payment request",
+    CreditCard,
+    "Send direct payment requests with faster follow-through.",
+  ],
 ];
 
 function cn(...classes: (string | false | undefined)[]) {
@@ -759,20 +826,23 @@ function OverviewPage({
   trades: Trade[];
   milestones: Milestone[];
   requests: RequestItem[];
-  activity: typeof initialActivity;
+  activity: ActivityItem[];
   onAction: (type: string) => void;
   onOpenDetails: (entityType: DetailEntityType, entityId: string) => void;
 }) {
   const totals = useMemo(() => {
     const protectedValue =
-      escrows.reduce((sum, x) => sum + x.amount, 0) +
-      trades.reduce((sum, x) => sum + x.amount, 0);
+      escrows.reduce((sum: number, x: Escrow) => sum + x.amount, 0) +
+      trades.reduce((sum: number, x: Trade) => sum + x.amount, 0);
 
     return {
       protectedValue,
-      activeEscrows: escrows.filter((x) => x.status !== "Completed").length,
-      liveTrades: trades.filter((x) => x.status !== "Completed").length,
-      openRequests: requests.filter((x) => x.status !== "Completed").length,
+      activeEscrows: escrows.filter((x: Escrow) => x.status !== "Completed")
+        .length,
+      liveTrades: trades.filter((x: Trade) => x.status !== "Completed").length,
+      openRequests: requests.filter(
+        (x: RequestItem) => x.status !== "Completed"
+      ).length,
     };
   }, [escrows, trades, requests]);
 
@@ -858,7 +928,7 @@ function OverviewPage({
               }
             />
             <div className="space-y-4">
-              {escrows.slice(0, 2).map((item) => (
+              {escrows.slice(0, 2).map((item: Escrow) => (
                 <ListCard
                   key={item.id}
                   title={item.title}
@@ -900,7 +970,7 @@ function OverviewPage({
                 </ListCard>
               ))}
 
-              {trades.slice(0, 1).map((item) => (
+              {trades.slice(0, 1).map((item: Trade) => (
                 <ListCard
                   key={item.id}
                   title={item.pair}
@@ -943,20 +1013,12 @@ function OverviewPage({
                 description="Start the most common workflows in fewer steps."
               />
               <div className="grid grid-cols-2 gap-3">
-                {[
-                  ["New escrow", ShieldCheck, "newEscrow"],
-                  ["New trade", RefreshCcw, "newTrade"],
-                  ["Milestone plan", Layers3, "newMilestone"],
-                  ["Request payment", HandCoins, "newPayment"],
-                ].map(([label, Icon, action]) => {
-                  const ActionIcon = Icon as React.ComponentType<{
-                    className?: string;
-                  }>;
-
+                {overviewQuickActions.map(([label, Icon, action]) => {
+                  const ActionIcon = Icon;
                   return (
                     <button
                       key={label}
-                      onClick={() => onAction(action as string)}
+                      onClick={() => onAction(action)}
                       className="rounded-[24px] border border-slate-200 bg-slate-50 p-4 text-left transition hover:bg-white hover:shadow-sm"
                     >
                       <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-white text-slate-900 shadow-sm">
@@ -979,7 +1041,7 @@ function OverviewPage({
                 description="Stay up to date with important changes across transactions and requests."
               />
               <div className="space-y-4">
-                {activity.slice(0, 4).map((item) => (
+                {activity.slice(0, 4).map((item: ActivityItem) => (
                   <div
                     key={item.id}
                     className="flex items-start gap-3 rounded-[20px] border border-slate-200 bg-slate-50 p-4"
@@ -1026,7 +1088,7 @@ function OverviewPage({
             }
           />
           <div className="grid gap-4 lg:grid-cols-2">
-            {milestones.map((item) => {
+            {milestones.map((item: Milestone) => {
               const progress = Math.round((item.completed / item.total) * 100);
 
               return (
@@ -1126,7 +1188,7 @@ function EscrowPage({
           }
         />
         <div className="space-y-4">
-          {escrows.map((item) => (
+          {escrows.map((item: Escrow) => (
             <ListCard
               key={item.id}
               title={item.title}
@@ -1225,7 +1287,7 @@ function TradesPage({
           }
         />
         <div className="space-y-4">
-          {trades.map((item) => (
+          {trades.map((item: Trade) => (
             <ListCard
               key={item.id}
               title={item.pair}
@@ -1301,7 +1363,7 @@ function MilestonesPage({
           }
         />
         <div className="grid gap-4 lg:grid-cols-2">
-          {milestones.map((item) => {
+          {milestones.map((item: Milestone) => {
             const progress = Math.round((item.completed / item.total) * 100);
 
             return (
@@ -1388,7 +1450,7 @@ function PaymentsPage({
             description="Track funding, settlement, and releases across transaction activity."
           />
           <div className="space-y-4">
-            {payments.map((item) => (
+            {payments.map((item: Payment) => (
               <ListCard
                 key={item.id}
                 title={item.title}
@@ -1443,22 +1505,12 @@ function PaymentsPage({
             description="Start related payment flows directly from this section."
           />
           <div className="grid gap-3">
-            {[
-              ["Request payment", HandCoins, "newPayment"],
-              ["Fund escrow", ShieldCheck, "newEscrow"],
-              ["Release milestone", Layers3, "newMilestone"],
-              ["Create trade", RefreshCcw, "newTrade"],
-              ["Start onramp", CircleDollarSign, "newOnramp"],
-              ["Start offramp", Wallet, "newOfframp"],
-            ].map(([label, Icon, action]) => {
-              const ActionIcon = Icon as React.ComponentType<{
-                className?: string;
-              }>;
-
+            {paymentActions.map(([label, Icon, action]) => {
+              const ActionIcon = Icon;
               return (
                 <button
                   key={label}
-                  onClick={() => onAction(action as string)}
+                  onClick={() => onAction(action)}
                   className="flex items-center justify-between rounded-[22px] border border-slate-200 bg-slate-50 p-4 text-left transition hover:bg-white"
                 >
                   <span className="flex items-center gap-3 text-sm font-semibold text-slate-900">
@@ -1485,21 +1537,24 @@ function RampPage({
   onAdvanceRamp,
   onOpenDetails,
 }: {
-  rampAccounts: typeof initialRampAccounts;
+  rampAccounts: RampAccount[];
   rampFlows: RampFlow[];
   onAction: (type: string) => void;
   onAdvanceRamp: (id: string) => void;
   onOpenDetails: (entityType: "ramp", entityId: string) => void;
 }) {
-  const totalWalletValue = rampAccounts.reduce((sum, item) => {
-    if (item.currency === "USD" || item.currency === "USDC") {
-      return sum + item.available;
-    }
-    if (item.currency === "NGN") {
-      return sum + item.available / 1500;
-    }
-    return sum;
-  }, 0);
+  const totalWalletValue = rampAccounts.reduce(
+    (sum: number, item: RampAccount) => {
+      if (item.currency === "USD" || item.currency === "USDC") {
+        return sum + item.available;
+      }
+      if (item.currency === "NGN") {
+        return sum + item.available / 1500;
+      }
+      return sum;
+    },
+    0
+  );
 
   return (
     <div className="space-y-6">
@@ -1514,7 +1569,8 @@ function RampPage({
         <MetricCard
           title="Open ramp flows"
           value={String(
-            rampFlows.filter((item) => item.status !== "Completed").length
+            rampFlows.filter((item: RampFlow) => item.status !== "Completed")
+              .length
           )}
           subtext="Transfers currently awaiting review, processing, or settlement."
           icon={Wallet}
@@ -1554,7 +1610,7 @@ function RampPage({
               }
             />
             <div className="space-y-4">
-              {rampFlows.map((item) => (
+              {rampFlows.map((item: RampFlow) => (
                 <ListCard
                   key={item.id}
                   title={`${item.type} • ${money(item.amount)}`}
@@ -1632,7 +1688,7 @@ function RampPage({
                 description="Review the balances used across wallet, settlement, and payout activity."
               />
               <div className="space-y-3">
-                {rampAccounts.map((item) => (
+                {rampAccounts.map((item: RampAccount) => (
                   <div
                     key={item.id}
                     className="rounded-[22px] border border-slate-200 bg-slate-50 p-4"
@@ -1709,32 +1765,8 @@ function RequestsPage({
             description="Start request-based workflows for delivery, shopping, services, and local tasks."
           />
           <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-            {[
-              [
-                "Errand request",
-                Truck,
-                "Create local task flows with protected payment terms.",
-              ],
-              [
-                "Shopping request",
-                Store,
-                "Manage assisted purchases with clearer settlement terms.",
-              ],
-              [
-                "Service request",
-                Briefcase,
-                "Turn service agreements into escrow or milestone workflows.",
-              ],
-              [
-                "Payment request",
-                CreditCard,
-                "Send direct payment requests with faster follow-through.",
-              ],
-            ].map(([title, Icon, desc]) => {
-              const ActionIcon = Icon as React.ComponentType<{
-                className?: string;
-              }>;
-
+            {requestCategories.map(([title, Icon, desc]) => {
+              const ActionIcon = Icon;
               return (
                 <button
                   key={title}
@@ -1764,7 +1796,7 @@ function RequestsPage({
             description="Review open and assigned requests before they move into completion."
           />
           <div className="space-y-4">
-            {requests.map((item) => (
+            {requests.map((item: RequestItem) => (
               <ListCard
                 key={item.id}
                 title={item.title}
@@ -1805,7 +1837,7 @@ function RequestsPage({
   );
 }
 
-function ActivityPage({ activity }: { activity: typeof initialActivity }) {
+function ActivityPage({ activity }: { activity: ActivityItem[] }) {
   return (
     <Surface>
       <CardContent className="p-5 md:p-6">
@@ -1814,7 +1846,7 @@ function ActivityPage({ activity }: { activity: typeof initialActivity }) {
           description="Monitor recent updates across transactions, releases, and requests."
         />
         <div className="space-y-4">
-          {activity.map((item) => (
+          {activity.map((item: ActivityItem) => (
             <div
               key={item.id}
               className="rounded-[22px] border border-slate-200 bg-slate-50 p-4"
@@ -2677,14 +2709,15 @@ export default function ErrandGoWebApp() {
     entityId: string;
   } | null>(null);
 
-  const [rampAccounts, setRampAccounts] = useState(initialRampAccounts);
+  const [rampAccounts, setRampAccounts] =
+    useState<RampAccount[]>(initialRampAccounts);
   const [rampFlows, setRampFlows] = useState<RampFlow[]>(initialRampFlows);
   const [escrows, setEscrows] = useState<Escrow[]>(initialEscrows);
   const [trades, setTrades] = useState<Trade[]>(initialTrades);
   const [milestones, setMilestones] = useState<Milestone[]>(initialMilestones);
   const [payments, setPayments] = useState<Payment[]>(initialPayments);
   const [requests, setRequests] = useState<RequestItem[]>(initialRequests);
-  const [activity, setActivity] = useState(initialActivity);
+  const [activity, setActivity] = useState<ActivityItem[]>(initialActivity);
 
   const pushActivity = (text: string) => {
     setActivity((prev) => [
