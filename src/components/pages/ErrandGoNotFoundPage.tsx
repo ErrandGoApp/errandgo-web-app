@@ -9,7 +9,7 @@ import {
   ShieldCheck,
 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
+// import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 
 function cn(...classes: (string | false | null | undefined)[]) {
@@ -206,9 +206,15 @@ export default function ErrandGoNotFoundPage({
                   </p>
 
                   <div className="mt-4">
-                    <Button asChild variant="outline" className="rounded-2xl">
+                    {/* <Button asChild variant="outline" className="rounded-2xl">
                       <a href={item.href}>Open</a>
-                    </Button>
+                    </Button> */}
+                    <a
+                      href={item.href}
+                      className="inline-flex h-10 items-center justify-center rounded-2xl border border-slate-200 bg-white px-4 text-sm font-medium text-slate-900 transition hover:bg-slate-100"
+                    >
+                      Open
+                    </a>
                   </div>
                 </CardContent>
               </Surface>

@@ -13,7 +13,7 @@ export function Button({
   ...props
 }: ButtonProps) {
   const variants = {
-    // default:
+    default: "",
     //   "bg-slate-950 text-white hover:bg-slate-800 border border-slate-950",
     outline:
       "bg-white text-slate-900 border border-slate-200 hover:bg-slate-50",
