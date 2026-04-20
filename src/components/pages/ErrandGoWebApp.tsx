@@ -871,9 +871,9 @@ function OverviewPage({
               <Badge className="rounded-full border border-slate-200 bg-white px-3 py-1 text-[11px] uppercase tracking-[0.18em] text-slate-700 shadow-none hover:bg-white">
                 Transaction workspace
               </Badge>
-              <h1 className="mt-4 max-w-3xl text-3xl font-semibold tracking-tight text-slate-950 md:text-5xl md:leading-tight">
-                Manage escrow, payments, trades, and service requests in one
-                seamless workflow.
+              <h1 className="mt-4 max-w-3xl text-3xl font-semibold tracking-tight text-slate-800 md:text-5xl md:leading-tight">
+                Manage service payments, escrow, milestone releases, and
+                transfers from one secure platform.
               </h1>
               <p className="mt-4 max-w-2xl text-base leading-8 text-slate-600 md:text-lg">
                 Track every transaction from creation to completion with a
@@ -1890,9 +1890,9 @@ function SettingsPage() {
           />
           <div className="space-y-4">
             {[
-              ["Display name", "Amina Yusuf"],
-              ["Region", "Kuwait"],
-              ["Primary wallet", "0xA9f...4C82"],
+              ["Display name", "Taylor Jackson"],
+              ["Region", "UAE"],
+              ["Primary wallet", "GEA9f...4C82"],
             ].map(([label, value]) => (
               <div
                 key={label}
