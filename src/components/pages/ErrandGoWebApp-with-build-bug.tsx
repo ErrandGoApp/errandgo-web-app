@@ -65,93 +65,6 @@ type DetailEntityType =
   | "request"
   | "ramp";
 
-type Escrow = {
-  id: string;
-  title: string;
-  type: string;
-  counterparty: string;
-  amount: number;
-  status: string;
-  progress: number;
-  createdAt: string;
-};
-
-type Trade = {
-  id: string;
-  pair: string;
-  role: string;
-  counterparty: string;
-  amount: number;
-  rate: string;
-  status: string;
-};
-
-type Milestone = {
-  id: string;
-  project: string;
-  completed: number;
-  total: number;
-  released: number;
-  remaining: number;
-};
-
-type Payment = {
-  id: string;
-  title: string;
-  amount: number;
-  status: string;
-  method: string;
-};
-
-type RequestItem = {
-  id: string;
-  title: string;
-  category: string;
-  budget: number;
-  status: string;
-};
-
-type RampFlow = {
-  id: string;
-  type: string;
-  source: string;
-  destination: string;
-  amount: number;
-  receiveAmount: number;
-  status: string;
-  eta: string;
-  fee: number;
-  reference: string;
-};
-
-type Entity = Escrow | Trade | Milestone | Payment | RequestItem | RampFlow;
-
-function isEscrow(entity: Entity): entity is Escrow {
-  return (
-    "progress" in entity && "counterparty" in entity && "createdAt" in entity
-  );
-}
-
-function isTrade(entity: Entity): entity is Trade {
-  return "pair" in entity && "rate" in entity;
-}
-
-function isMilestone(entity: Entity): entity is Milestone {
-  return "project" in entity && "released" in entity && "remaining" in entity;
-}
-
-function isPayment(entity: Entity): entity is Payment {
-  return "method" in entity && "title" in entity && "status" in entity;
-}
-
-function isRequestItem(entity: Entity): entity is RequestItem {
-  return "budget" in entity && "category" in entity;
-}
-
-function isRampFlow(entity: Entity): entity is RampFlow {
-  return "reference" in entity && "eta" in entity && "receiveAmount" in entity;
-}
-
 const initialRampAccounts = [
   {
     id: "BAL-USD",
@@ -179,7 +92,7 @@ const initialRampAccounts = [
   },
 ];
 
-const initialRampFlows: RampFlow[] = [
+const initialRampFlows = [
   {
     id: "RMP-401",
     type: "Onramp",
@@ -218,7 +131,7 @@ const initialRampFlows: RampFlow[] = [
   },
 ];
 
-const initialEscrows: Escrow[] = [
+const initialEscrows = [
   {
     id: "ESC-1042",
     title: "Home appliance purchase",
@@ -251,7 +164,7 @@ const initialEscrows: Escrow[] = [
   },
 ];
 
-const initialTrades: Trade[] = [
+const initialTrades = [
   {
     id: "TRD-281",
     pair: "USDC / NGN",
@@ -272,7 +185,7 @@ const initialTrades: Trade[] = [
   },
 ];
 
-const initialMilestones: Milestone[] = [
+const initialMilestones = [
   {
     id: "MLS-011",
     project: "Kitchen renovation",
@@ -291,7 +204,7 @@ const initialMilestones: Milestone[] = [
   },
 ];
 
-const initialPayments: Payment[] = [
+const initialPayments = [
   {
     id: "PAY-1004",
     title: "Escrow funding",
@@ -315,7 +228,7 @@ const initialPayments: Payment[] = [
   },
 ];
 
-const initialRequests: RequestItem[] = [
+const initialRequests = [
   {
     id: "REQ-201",
     title: "Grocery pickup",
@@ -475,9 +388,25 @@ function Sidebar({
       >
         <div className="flex items-center justify-between border-b border-slate-200 px-5 py-5">
           <div className="flex items-center gap-3">
-            <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-slate-950 text-white shadow-sm">
-              <ShieldCheck className="h-5 w-5" />
-            </div>
+            <svg
+              className="flex h-11 w-11 items-center justify-center rounded-2xl "
+              viewBox="0 0 130 130"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                d="M71.1407 13.8977C84.7778 6.41644 102.07 9.74383 113.715 19.2483C119.466 24.1573 123.517 30.8469 125.858 37.9875C126.016 38.425 126.173 38.8629 126.335 39.3137C127.477 43.0025 127.612 46.5785 127.632 50.4309C127.636 50.9306 127.64 51.4307 127.645 51.9455C127.532 64.0959 121.536 74.2533 115.464 84.3615C115.093 84.9855 114.723 85.6096 114.353 86.2336C109.839 93.7795 104.835 101.033 99.7461 108.199C99.2954 108.834 98.8462 109.47 98.3975 110.107C96.9167 112.205 95.4122 114.284 93.876 116.343C93.6755 116.614 93.4753 116.886 93.2686 117.165C92.6995 117.925 92.1166 118.672 91.5274 119.416C91.3611 119.64 91.1948 119.864 91.0235 120.094C90.5311 120.695 90.5311 120.695 89.4786 121.54C88.1172 121.671 88.117 121.672 86.6807 121.141C85.6367 120.197 84.8491 119.108 84.0323 117.967C83.7914 117.644 83.55 117.321 83.3018 116.988C82.5541 115.979 81.8187 114.962 81.084 113.945C80.6442 113.345 80.2035 112.746 79.7627 112.148C78.4539 110.36 77.1678 108.557 75.8868 106.749C75.6558 106.424 75.4245 106.099 75.1866 105.765C72.6446 102.185 70.1407 98.5828 67.7413 94.9055C67.4591 94.4757 67.4588 94.4757 67.1709 94.0373C65.8922 92.0545 66.1622 91.9505 65.5626 91.261C65.1631 91.151 65.2298 91.1665 64.8887 91.1711C61.7654 91.2112 58.6421 91.2413 55.5186 91.261C53.913 91.2714 52.3077 91.2861 50.7022 91.3088C49.1522 91.3306 47.602 91.3417 46.0518 91.3469C45.461 91.3506 44.87 91.3586 44.2793 91.3694C43.4504 91.3839 42.622 91.3859 41.793 91.385C41.0859 91.3916 41.0857 91.3909 40.3643 91.3977C38.7219 91.0836 38.13 90.4562 37.1084 89.1584C36.8836 87.7346 36.8836 87.7344 37.1084 86.3606C37.8548 85.4152 38.4358 84.8971 39.5069 84.3615C40.1147 84.3246 40.7242 84.313 41.3331 84.3137C41.7176 84.3131 42.1029 84.3123 42.4991 84.3117C42.9222 84.3132 43.3453 84.3142 43.7813 84.3156C44.4482 84.3156 44.4485 84.3157 45.129 84.3156C46.6041 84.3159 48.0796 84.3194 49.5547 84.3225C50.5752 84.3232 51.5958 84.324 52.6163 84.3244C55.0316 84.3258 57.447 84.3282 59.8624 84.3322C62.6119 84.3367 65.3618 84.339 68.1114 84.341C73.768 84.3452 79.4245 84.3526 85.0811 84.3615C84.9368 84.1688 84.7923 83.9761 84.6436 83.7776C84.4581 83.5251 84.2732 83.2721 84.0821 83.0119C83.8966 82.7615 83.7107 82.5112 83.5196 82.2531C83.0824 81.5631 83.1524 81.7567 82.5528 80.9572C82.253 80.5575 82.5531 80.9566 82.1534 80.5569C81.3539 79.7574 80.5299 79.3718 79.6094 78.7893C75.6615 76.409 71.7872 75.9067 67.2374 75.9094C66.8613 75.908 66.4851 75.9069 66.0977 75.9055C65.2854 75.9026 64.4725 75.9001 63.6602 75.8987C62.375 75.8958 61.0899 75.8894 59.8047 75.8821C56.1518 75.8611 52.4988 75.8423 48.8458 75.8362C46.6081 75.8321 44.3705 75.8197 42.1329 75.803C41.2807 75.798 40.4284 75.7962 39.5762 75.7971C38.3866 75.798 37.1974 75.7896 36.0079 75.7785C35.6554 75.7812 35.3026 75.7836 34.9395 75.7864C32.5528 75.7497 32.5525 75.7497 31.3057 74.8039C30.3031 73.3912 30.1385 72.5094 30.3126 70.7688C30.8996 69.9029 30.8997 69.9027 31.9112 69.1701C33.1342 69.0207 34.2111 68.9675 35.4327 68.9885C35.7875 68.9883 36.1423 68.9878 36.5079 68.9875C37.6804 68.9886 38.853 69.0014 40.0254 69.0139C40.8388 69.0169 41.6525 69.0191 42.4659 69.0207C44.6056 69.0268 46.7452 69.0421 48.8848 69.0598C51.0687 69.0762 53.2536 69.084 55.4376 69.092C59.722 69.1092 64.0067 69.1365 68.2911 69.1701C67.8565 68.53 67.4188 67.8917 66.9805 67.2541C66.7373 66.8984 66.4938 66.5425 66.2432 66.176C63.7097 62.7908 59.6591 61.3832 55.6202 60.5539C54.0767 60.3453 52.5598 60.3201 51.0059 60.3244C50.6846 60.3237 50.3633 60.3233 50.0323 60.3225C49.3381 60.3209 48.6435 60.3197 47.9493 60.3196C46.4729 60.3182 44.9959 60.3101 43.5196 60.302C40.7741 60.2868 38.0288 60.2738 35.2833 60.2746C33.37 60.2749 31.4562 60.266 29.543 60.2502C28.8148 60.246 28.0866 60.2452 27.3584 60.2483C26.341 60.2521 25.324 60.2439 24.3067 60.2326C24.006 60.2367 23.7053 60.2402 23.3956 60.2444C21.8822 60.2142 21.2443 60.0962 20.1309 59.0364C19.3814 57.7398 19.2677 57.0516 19.5186 55.5774C20.2649 54.657 20.8603 54.1067 21.917 53.5783C22.7907 53.5416 23.6657 53.5318 24.5401 53.5334C24.8092 53.5334 25.0783 53.5335 25.3555 53.5334C26.2467 53.5337 27.1381 53.5362 28.0293 53.5393C28.6465 53.54 29.2637 53.5408 29.8809 53.5412C31.5069 53.5428 33.1329 53.5466 34.7588 53.551C36.4175 53.5551 38.0767 53.5568 39.7354 53.5588C42.9906 53.5631 46.2458 53.5699 49.501 53.5783C49.4976 53.1214 49.4948 52.6644 49.4913 52.1936C49.4884 51.5827 49.4851 50.9714 49.4825 50.3606C49.4787 49.9106 49.4785 49.9102 49.4747 49.4514C49.4386 38.3652 54.155 28.5012 61.794 20.6721C64.3649 18.1223 67.1499 16.1825 70.2901 14.4006C70.5708 14.2348 70.8514 14.0686 71.1407 13.8977ZM96.8604 32.175C92.1363 29.7519 85.1824 29.7772 80.4668 32.2024C80.1323 32.4025 79.8071 32.597 79.4825 32.7912C77.3838 33.9431 75.6953 35.2849 74.0362 37.0139C69.6333 42.1492 68.31 47.3414 68.6885 53.9797C69.4417 58.6852 71.6614 63.6731 75.5196 66.6135C75.7795 66.8034 76.0319 66.9877 76.2842 67.1721C80.258 70.5254 84.9728 71.8802 90.1749 71.6477C94.6714 71.258 99.9585 69.146 103.02 65.6477C103.308 65.2146 103.589 64.7946 103.869 64.3742C105.355 62.2029 106.822 60.0706 107.646 57.5539C107.721 57.2903 107.794 57.0344 107.867 56.7785C108.901 53.3704 108.943 49.9226 108.441 46.4084C106.811 41.0287 103.67 36.4805 98.9346 33.4211C98.5736 33.2071 98.2225 32.9989 97.8721 32.7912C97.5282 32.5816 97.1942 32.3785 96.8604 32.175Z"
+                fill="#6D35C0"
+              />
+              <path
+                d="M8.52137 53.3632C9.08334 53.3566 9.08334 53.3566 9.65666 53.3499C11.3783 53.3682 12.452 53.4353 13.9667 54.3017C14.7587 55.2352 14.9827 55.5831 14.9427 56.7862C14.9435 57.182 14.9435 57.182 14.9443 57.5858C14.6171 58.7412 14.0347 59.2219 13.1188 59.9844C11.6014 60.308 10.0695 60.2255 8.52137 60.2093C8.10343 60.2188 7.68549 60.2284 7.25489 60.2382C4.20734 60.2323 4.20734 60.2323 2.85112 59.0459C2.19901 57.732 2.05348 57.0342 2.32486 55.5869C4.0335 53.1749 5.79885 53.2939 8.52137 53.3632Z"
+                fill="#6C35BC"
+              />
+              <path
+                d="M19.5137 68.9706C19.9126 68.9644 20.3114 68.9582 20.7224 68.9519C23.6083 68.9673 23.6083 68.9673 24.9731 69.8826C25.534 70.8088 25.727 71.2955 25.7102 72.3687C25.7143 72.6325 25.7184 72.8964 25.7227 73.1682C25.3845 74.4414 25.0189 74.8241 23.9112 75.5669C22.4423 75.8062 20.9989 75.7898 19.5137 75.7668C19.1148 75.773 18.716 75.7791 18.305 75.7855C15.4191 75.77 15.4191 75.77 14.0543 74.8548C13.4934 73.9286 13.3004 73.4419 13.3172 72.3687C13.311 71.9729 13.311 71.9729 13.3047 71.5691C14.1165 68.5128 16.9216 68.9304 19.5137 68.9706Z"
+                fill="#6C35BE"
+              />
+            </svg>
             <div>
               <div className="text-base font-semibold tracking-tight text-slate-950">
                 ErrandGo
@@ -510,9 +439,7 @@ function Sidebar({
 
           <nav className="mt-6 space-y-1.5">
             {navItems.map((item) => {
-              const Icon = item.icon as React.ComponentType<{
-                className?: string;
-              }>;
+              const Icon = item.icon;
               const active = current === item.id;
               return (
                 <button
@@ -755,10 +682,10 @@ function OverviewPage({
   onAction,
   onOpenDetails,
 }: {
-  escrows: Escrow[];
-  trades: Trade[];
-  milestones: Milestone[];
-  requests: RequestItem[];
+  escrows: typeof initialEscrows;
+  trades: typeof initialTrades;
+  milestones: typeof initialMilestones;
+  requests: typeof initialRequests;
   activity: typeof initialActivity;
   onAction: (type: string) => void;
   onOpenDetails: (entityType: DetailEntityType, entityId: string) => void;
@@ -1103,7 +1030,7 @@ function EscrowPage({
   onAdvanceEscrow,
   onOpenDetails,
 }: {
-  escrows: Escrow[];
+  escrows: typeof initialEscrows;
   onAction: (type: string) => void;
   onConfirmReceipt: (id: string) => void;
   onAdvanceEscrow: (id: string) => void;
@@ -1203,7 +1130,7 @@ function TradesPage({
   onAdvanceTrade,
   onOpenDetails,
 }: {
-  trades: Trade[];
+  trades: typeof initialTrades;
   onAction: (type: string) => void;
   onAdvanceTrade: (id: string) => void;
   onOpenDetails: (entityType: "trade", entityId: string) => void;
@@ -1279,7 +1206,7 @@ function MilestonesPage({
   onReleaseMilestone,
   onOpenDetails,
 }: {
-  milestones: Milestone[];
+  milestones: typeof initialMilestones;
   onAction: (type: string) => void;
   onReleaseMilestone: (id: string) => void;
   onOpenDetails: (entityType: "milestone", entityId: string) => void;
@@ -1374,7 +1301,7 @@ function PaymentsPage({
   onAdvancePayment,
   onOpenDetails,
 }: {
-  payments: Payment[];
+  payments: typeof initialPayments;
   onAction: (type: string) => void;
   onAdvancePayment: (id: string) => void;
   onOpenDetails: (entityType: "payment", entityId: string) => void;
@@ -1486,7 +1413,7 @@ function RampPage({
   onOpenDetails,
 }: {
   rampAccounts: typeof initialRampAccounts;
-  rampFlows: RampFlow[];
+  rampFlows: typeof initialRampFlows;
   onAction: (type: string) => void;
   onAdvanceRamp: (id: string) => void;
   onOpenDetails: (entityType: "ramp", entityId: string) => void;
@@ -1695,7 +1622,7 @@ function RequestsPage({
   onAdvanceRequest,
   onOpenDetails,
 }: {
-  requests: RequestItem[];
+  requests: typeof initialRequests;
   onAction: (type: string) => void;
   onAdvanceRequest: (id: string) => void;
   onOpenDetails: (entityType: "request", entityId: string) => void;
@@ -1842,9 +1769,9 @@ function SettingsPage() {
           />
           <div className="space-y-4">
             {[
-              ["Display name", "Amina Yusuf"],
-              ["Region", "Kuwait"],
-              ["Primary wallet", "0xA9f...4C82"],
+              ["Display name", "Taylor Radison"],
+              ["Region", "UAE"],
+              ["Primary wallet", "GEA9f...4C82"],
             ].map(([label, value]) => (
               <div
                 key={label}
@@ -1944,12 +1871,12 @@ function DetailsPage({
     entityType: DetailEntityType;
     entityId: string;
   };
-  escrows: Escrow[];
-  trades: Trade[];
-  milestones: Milestone[];
-  payments: Payment[];
-  requests: RequestItem[];
-  rampFlows: RampFlow[];
+  escrows: typeof initialEscrows;
+  trades: typeof initialTrades;
+  milestones: typeof initialMilestones;
+  payments: typeof initialPayments;
+  requests: typeof initialRequests;
+  rampFlows: typeof initialRampFlows;
   onBack: () => void;
   onOpenCreate: (type: string) => void;
   onAdvanceEscrow: (id: string) => void;
@@ -1960,7 +1887,7 @@ function DetailsPage({
   onAdvanceRequest: (id: string) => void;
   onAdvanceRamp: (id: string) => void;
 }) {
-  const entity = useMemo<Entity | null>(() => {
+  const entity = useMemo(() => {
     switch (details.entityType) {
       case "escrow":
         return escrows.find((item) => item.id === details.entityId) || null;
@@ -2041,25 +1968,22 @@ function DetailsPage({
     },
   }[details.entityType];
 
-  const Icon = meta.icon as React.ComponentType<{ className?: string }>;
+  const Icon = meta.icon;
 
-  let headerTitle = "";
-  if (isEscrow(entity)) headerTitle = entity.title;
-  else if (isTrade(entity)) headerTitle = entity.pair;
-  else if (isMilestone(entity)) headerTitle = entity.project;
-  else if (isPayment(entity)) headerTitle = entity.title;
-  else if (isRequestItem(entity)) headerTitle = entity.title;
-  else if (isRampFlow(entity)) headerTitle = `${entity.type} transfer`;
+  const headerTitle =
+    details.entityType === "escrow"
+      ? entity.title
+      : details.entityType === "trade"
+      ? entity.pair
+      : details.entityType === "milestone"
+      ? entity.project
+      : details.entityType === "payment"
+      ? entity.title
+      : details.entityType === "request"
+      ? entity.title
+      : `${entity.type} transfer`;
 
-  const headerId = entity.id;
-  const entityStatus =
-    isEscrow(entity) ||
-    isTrade(entity) ||
-    isPayment(entity) ||
-    isRequestItem(entity) ||
-    isRampFlow(entity)
-      ? entity.status
-      : null;
+  const headerId = "id" in entity ? entity.id : details.entityId;
 
   return (
     <div className="space-y-6">
@@ -2096,14 +2020,14 @@ function DetailsPage({
                   </h1>
                   <div className="mt-3 flex flex-wrap items-center gap-3">
                     <span className="text-sm text-slate-500">{headerId}</span>
-                    {entityStatus ? (
+                    {"status" in entity ? (
                       <span
                         className={cn(
                           "rounded-full border px-2.5 py-1 text-xs font-medium",
-                          statusTone(entityStatus)
+                          statusTone(entity.status)
                         )}
                       >
-                        {entityStatus}
+                        {entity.status}
                       </span>
                     ) : null}
                   </div>
@@ -2112,7 +2036,7 @@ function DetailsPage({
             </div>
 
             <div className="grid gap-3 sm:grid-cols-2 xl:w-[360px]">
-              {isEscrow(entity) && (
+              {details.entityType === "escrow" && (
                 <>
                   <Button
                     variant="outline"
@@ -2146,7 +2070,7 @@ function DetailsPage({
                 </>
               )}
 
-              {isTrade(entity) && (
+              {details.entityType === "trade" && (
                 <>
                   <Button
                     variant="outline"
@@ -2173,7 +2097,7 @@ function DetailsPage({
                 </>
               )}
 
-              {isMilestone(entity) && (
+              {details.entityType === "milestone" && (
                 <>
                   <Button
                     variant="outline"
@@ -2191,7 +2115,7 @@ function DetailsPage({
                 </>
               )}
 
-              {isPayment(entity) && (
+              {details.entityType === "payment" && (
                 <>
                   <Button
                     variant="outline"
@@ -2218,7 +2142,7 @@ function DetailsPage({
                 </>
               )}
 
-              {isRequestItem(entity) && (
+              {details.entityType === "request" && (
                 <>
                   <Button
                     variant="outline"
@@ -2236,7 +2160,7 @@ function DetailsPage({
                 </>
               )}
 
-              {isRampFlow(entity) && (
+              {details.entityType === "ramp" && (
                 <>
                   <Button
                     variant="outline"
@@ -2277,7 +2201,7 @@ function DetailsPage({
           description="Core information and transaction context."
         >
           <div className="grid gap-4 sm:grid-cols-2">
-            {isEscrow(entity) && (
+            {details.entityType === "escrow" && (
               <>
                 <DetailStat label="Type" value={entity.type} />
                 <DetailStat label="Counterparty" value={entity.counterparty} />
@@ -2286,7 +2210,7 @@ function DetailsPage({
               </>
             )}
 
-            {isTrade(entity) && (
+            {details.entityType === "trade" && (
               <>
                 <DetailStat label="Role" value={entity.role} />
                 <DetailStat label="Counterparty" value={entity.counterparty} />
@@ -2295,7 +2219,7 @@ function DetailsPage({
               </>
             )}
 
-            {isMilestone(entity) && (
+            {details.entityType === "milestone" && (
               <>
                 <DetailStat
                   label="Completed"
@@ -2312,7 +2236,7 @@ function DetailsPage({
               </>
             )}
 
-            {isPayment(entity) && (
+            {details.entityType === "payment" && (
               <>
                 <DetailStat label="Method" value={entity.method} />
                 <DetailStat label="Amount" value={money(entity.amount)} />
@@ -2321,7 +2245,7 @@ function DetailsPage({
               </>
             )}
 
-            {isRequestItem(entity) && (
+            {details.entityType === "request" && (
               <>
                 <DetailStat label="Category" value={entity.category} />
                 <DetailStat label="Budget" value={money(entity.budget)} />
@@ -2330,7 +2254,7 @@ function DetailsPage({
               </>
             )}
 
-            {isRampFlow(entity) && (
+            {details.entityType === "ramp" && (
               <>
                 <DetailStat label="Type" value={entity.type} />
                 <DetailStat label="Source" value={entity.source} />
@@ -2349,7 +2273,7 @@ function DetailsPage({
         </DetailSection>
 
         <div className="space-y-6">
-          {isEscrow(entity) ? (
+          {"progress" in entity ? (
             <DetailSection
               title="Progress"
               description="Track how far this item has moved through its current workflow."
@@ -2375,9 +2299,9 @@ function DetailsPage({
               <div className="rounded-[22px] border border-slate-200 bg-slate-50 p-4 text-sm leading-6 text-slate-600">
                 Record created and added to the workspace.
               </div>
-              {entityStatus && entityStatus !== "Completed" ? (
+              {"status" in entity && entity.status !== "Completed" ? (
                 <div className="rounded-[22px] border border-slate-200 bg-slate-50 p-4 text-sm leading-6 text-slate-600">
-                  Current status: {entityStatus}.
+                  Current status: {entity.status}.
                 </div>
               ) : (
                 <div className="rounded-[22px] border border-emerald-200 bg-emerald-50 p-4 text-sm leading-6 text-emerald-700">
@@ -2678,12 +2602,12 @@ export default function ErrandGoWebApp() {
   } | null>(null);
 
   const [rampAccounts, setRampAccounts] = useState(initialRampAccounts);
-  const [rampFlows, setRampFlows] = useState<RampFlow[]>(initialRampFlows);
-  const [escrows, setEscrows] = useState<Escrow[]>(initialEscrows);
-  const [trades, setTrades] = useState<Trade[]>(initialTrades);
-  const [milestones, setMilestones] = useState<Milestone[]>(initialMilestones);
-  const [payments, setPayments] = useState<Payment[]>(initialPayments);
-  const [requests, setRequests] = useState<RequestItem[]>(initialRequests);
+  const [rampFlows, setRampFlows] = useState(initialRampFlows);
+  const [escrows, setEscrows] = useState(initialEscrows);
+  const [trades, setTrades] = useState(initialTrades);
+  const [milestones, setMilestones] = useState(initialMilestones);
+  const [payments, setPayments] = useState(initialPayments);
+  const [requests, setRequests] = useState(initialRequests);
   const [activity, setActivity] = useState(initialActivity);
 
   const pushActivity = (text: string) => {
@@ -2716,7 +2640,7 @@ export default function ErrandGoWebApp() {
     notes: string;
   }) => {
     if (modalType === "newTrade") {
-      const trade: Trade = {
+      const trade = {
         id: `TRD-${300 + trades.length}`,
         pair: "USDC / NGN",
         role: "Buyer",
@@ -2733,7 +2657,7 @@ export default function ErrandGoWebApp() {
     }
 
     if (modalType === "newMilestone") {
-      const milestone: Milestone = {
+      const milestone = {
         id: `MLS-${20 + milestones.length}`,
         project: form.title || "New milestone plan",
         completed: 0,
@@ -2749,7 +2673,7 @@ export default function ErrandGoWebApp() {
     }
 
     if (modalType === "newPayment") {
-      const payment: Payment = {
+      const payment = {
         id: `PAY-${1100 + payments.length}`,
         title: form.title || "Payment request",
         amount: Number(form.amount || 0),
@@ -2769,7 +2693,7 @@ export default function ErrandGoWebApp() {
       const fee = Math.max(4, Math.round(amount * (isOnramp ? 0.01 : 0.0075)));
       const receiveAmount = Math.max(0, amount - fee);
 
-      const flow: RampFlow = {
+      const flow = {
         id: `RMP-${420 + rampFlows.length}`,
         type: isOnramp ? "Onramp" : "Offramp",
         source: isOnramp ? form.category || "Bank transfer" : "USDC Wallet",
@@ -2826,7 +2750,7 @@ export default function ErrandGoWebApp() {
       return;
     }
 
-    const escrow: Escrow = {
+    const escrow = {
       id: `ESC-${1100 + escrows.length}`,
       title: form.title || "New escrow transaction",
       type: form.category,
