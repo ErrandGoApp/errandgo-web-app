@@ -12,6 +12,7 @@ import { ToastContainer } from "react-toastify";
 import ErrandGoWebApp from "./pages/ErrandGoWebApp.tsx";
 import ErrandGoNotFoundPage from "./pages/ErrandGoNotFoundPage.tsx";
 import GetStartedModal from "./pages/GetStartedModal.tsx";
+import { StatesProvider } from "./contexts/StatesContext.tsx";
 
 const router = createBrowserRouter([
   {
@@ -44,8 +45,10 @@ const router = createBrowserRouter([
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
     <ReactQueryProviders>
-      <RouterProvider router={router} />
-      <ToastContainer />
+      <StatesProvider>
+        <RouterProvider router={router} />
+        <ToastContainer />
+      </StatesProvider>
     </ReactQueryProviders>
   </StrictMode>
 );
