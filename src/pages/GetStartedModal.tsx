@@ -105,10 +105,16 @@ export default function GetStartedModal() {
                       onAuthSuccess();
                     }}
                   >
-                    <img
+                    {/* <img
                       className="h-auto w-8 rounded-full "
                       src="../../public/cryptoIcons/Stellar.svg"
                       alt=""
+                    /> */}
+
+                    <img
+                      className="h-auto w-8 rounded-full"
+                      src="/cryptoIcons/Stellar.svg"
+                      // alt="Stellar"
                     />
 
                     {loadingMethod === "wallet"
