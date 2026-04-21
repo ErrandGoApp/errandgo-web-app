@@ -1,4 +1,5 @@
 import React, { useMemo, useState } from "react";
+import { Outlet, useLocation, useNavigate } from "react-router";
 import {
   ArrowLeft,
   ArrowRight,
@@ -32,6 +33,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
+import AuthBadge from "@/components/ui/AuthBadge";
 
 const navItems = [
   { id: "overview", label: "Overview", icon: Home },
@@ -56,6 +58,15 @@ type WorkspaceView =
   | "activity"
   | "settings"
   | "details";
+
+type LoginMethod = "wallet" | "google" | "email";
+
+type AuthState = {
+  isAuthenticated: boolean;
+  method: LoginMethod | null;
+  email: string;
+  displayName: string;
+};
 
 type DetailEntityType =
   | "escrow"
@@ -511,15 +522,14 @@ function Surface({
 
 function Sidebar({
   current,
-  setCurrent,
   mobileOpen,
   setMobileOpen,
 }: {
   current: string;
-  setCurrent: (value: WorkspaceView) => void;
   mobileOpen: boolean;
   setMobileOpen: (value: boolean) => void;
 }) {
+  const navigate = useNavigate();
   return (
     <>
       <AnimatePresence>
@@ -601,7 +611,8 @@ function Sidebar({
                 <button
                   key={item.id}
                   onClick={() => {
-                    setCurrent(item.id as WorkspaceView);
+                    const path = item.id === "overview" ? "/" : `/${item.id}`;
+                    navigate(path);
                     setMobileOpen(false);
                   }}
                   className={cn(
@@ -643,6 +654,8 @@ function Topbar({
   setSearch,
   filter,
   setFilter,
+  auth,
+  onLogout,
 }: {
   current: string;
   onOpenMenu: () => void;
@@ -651,10 +664,14 @@ function Topbar({
   setSearch: (v: string) => void;
   filter: string;
   setFilter: (v: string) => void;
+  auth: AuthState;
+  onLogout: () => void;
 }) {
   const title =
     navItems.find((item) => item.id === current)?.label ||
     (current === "details" ? "Details" : "Overview");
+
+  const navigate = useNavigate();
 
   return (
     <header className="sticky top-0 z-20 border-b border-slate-200/80 bg-white/85 backdrop-blur-xl">
@@ -675,10 +692,30 @@ function Topbar({
             </div>
           </div>
 
-          <div className="flex items-center gap-2">
+          {/* <div className="flex items-center gap-2">
             <Button variant="outline" size="icon" className="rounded-2xl">
               <Bell className="h-4.5 w-4.5" />
             </Button>
+            <Button
+              onClick={onOpenCreate}
+              className="rounded-2xl bg-slate-950 px-4 text-white hover:bg-slate-800"
+            >
+              <Plus className="mr-2 h-4 w-4" />
+              Create
+            </Button>
+          </div> */}
+
+          <div className="flex items-center gap-3">
+            <AuthBadge
+              auth={auth}
+              onLogout={onLogout}
+              onLoginClick={() => navigate("/auth")}
+            />
+
+            <Button variant="outline" size="icon" className="rounded-2xl">
+              <Bell className="h-4.5 w-4.5" />
+            </Button>
+
             <Button
               onClick={onOpenCreate}
               className="rounded-2xl bg-slate-950 px-4 text-white hover:bg-slate-800"
@@ -2711,9 +2748,7 @@ function Toast({ message, onClose }: { message: string; onClose: () => void }) {
     </AnimatePresence>
   );
 }
-
 export default function ErrandGoWebApp() {
-  const [current, setCurrent] = useState<WorkspaceView>("overview");
   const [mobileOpen, setMobileOpen] = useState(false);
   const [modalOpen, setModalOpen] = useState(false);
   const [modalType, setModalType] = useState("newEscrow");
@@ -2725,6 +2760,36 @@ export default function ErrandGoWebApp() {
     entityId: string;
   } | null>(null);
 
+  const [auth, setAuth] = useState<AuthState>({
+    isAuthenticated: false,
+    method: null,
+    email: "",
+    displayName: "",
+  });
+
+  const location = useLocation();
+  // const params = useParams();
+
+  const current = useMemo<WorkspaceView>(() => {
+    const pathname = location.pathname;
+
+    if (pathname === "/") return "overview";
+    if (pathname.startsWith("/escrow")) return "escrow";
+    if (pathname.startsWith("/trades")) return "trades";
+    if (pathname.startsWith("/milestones")) return "milestones";
+    if (pathname.startsWith("/payments")) return "payments";
+    if (pathname.startsWith("/ramps")) return "ramps";
+    if (pathname.startsWith("/requests")) return "requests";
+    if (pathname.startsWith("/activity")) return "activity";
+    if (pathname.startsWith("/settings")) return "settings";
+    if (pathname.startsWith("/details/")) return "details";
+
+    return "overview";
+  }, [location.pathname]);
+
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [pendingAction, setPendingAction] = useState<null | (() => void)>(null);
+
   const [rampAccounts, setRampAccounts] =
     useState<RampAccount[]>(initialRampAccounts);
   const [rampFlows, setRampFlows] = useState<RampFlow[]>(initialRampFlows);
@@ -2735,11 +2800,51 @@ export default function ErrandGoWebApp() {
   const [requests, setRequests] = useState<RequestItem[]>(initialRequests);
   const [activity, setActivity] = useState<ActivityItem[]>(initialActivity);
 
+  const navigate = useNavigate();
+
   const pushActivity = (text: string) => {
     setActivity((prev) => [
       { id: Date.now(), text, time: "Just now", tone: "default" },
       ...prev,
     ]);
+  };
+
+  const requireAuth = (action: () => void) => {
+    if (isAuthenticated) {
+      action();
+      return;
+    }
+
+    setPendingAction(() => action);
+    navigate("/auth");
+  };
+
+  const handleLogout = () => {
+    setAuth({
+      isAuthenticated: false,
+      method: null,
+      email: "",
+      displayName: "",
+    });
+
+    setIsAuthenticated(false);
+    setToast("You have been signed out.");
+  };
+
+  const handleAuthSuccess = () => {
+    setIsAuthenticated(true);
+    navigate("/");
+
+    if (pendingAction) {
+      const action = pendingAction;
+      setPendingAction(null);
+      action();
+    }
+  };
+
+  const handleAuthClose = () => {
+    setPendingAction(null);
+    navigate("/");
   };
 
   const openCreate = (type = "newEscrow") => {
@@ -2749,12 +2854,12 @@ export default function ErrandGoWebApp() {
 
   const openDetails = (entityType: DetailEntityType, entityId: string) => {
     setDetails({ entityType, entityId });
-    setCurrent("details");
+    // setCurrent("details");
   };
 
   const closeDetails = () => {
     setDetails(null);
-    setCurrent("overview");
+    // setCurrent("overview");
   };
 
   const handleCreate = (form: {
@@ -2777,7 +2882,7 @@ export default function ErrandGoWebApp() {
       setTrades((prev) => [trade, ...prev]);
       setToast("Trade created successfully.");
       pushActivity(`Trade ${trade.id} created`);
-      setCurrent("trades");
+      // setCurrent("trades");
       return;
     }
 
@@ -2793,7 +2898,7 @@ export default function ErrandGoWebApp() {
       setMilestones((prev) => [milestone, ...prev]);
       setToast("Milestone plan created successfully.");
       pushActivity(`Milestone plan ${milestone.id} created`);
-      setCurrent("milestones");
+      // setCurrent("milestones");
       return;
     }
 
@@ -2808,7 +2913,7 @@ export default function ErrandGoWebApp() {
       setPayments((prev) => [payment, ...prev]);
       setToast("Payment request created successfully.");
       pushActivity(`Payment request ${payment.id} created`);
-      setCurrent("payments");
+      // setCurrent("payments");
       return;
     }
 
@@ -2871,7 +2976,7 @@ export default function ErrandGoWebApp() {
 
       setToast(`${flow.type} created successfully.`);
       pushActivity(`${flow.type} ${flow.id} created`);
-      setCurrent("ramps");
+      // setCurrent("ramps");
       return;
     }
 
@@ -2889,7 +2994,7 @@ export default function ErrandGoWebApp() {
     setEscrows((prev) => [escrow, ...prev]);
     setToast("Escrow created successfully.");
     pushActivity(`Escrow ${escrow.id} created`);
-    setCurrent("escrow");
+    // setCurrent("escrow");
   };
 
   const handleConfirmReceipt = (id: string) => {
@@ -3070,28 +3175,79 @@ export default function ErrandGoWebApp() {
     [rampFlows, search, filter]
   );
 
+  const handleLogin = (
+    method: LoginMethod,
+    payload?: { email?: string; password?: string }
+  ) => {
+    const derivedEmail =
+      method === "email"
+        ? payload?.email || "hello@errandgo.app"
+        : method === "google"
+        ? "hello.google@errandgo.app"
+        : "wallet-user@errandgo.app";
+
+    const derivedName =
+      method === "wallet"
+        ? "Wallet User"
+        : method === "google"
+        ? "Google User"
+        : "Email User";
+
+    setAuth({
+      isAuthenticated: true,
+      method,
+      email: derivedEmail,
+      displayName: derivedName,
+    });
+
+    setToast("You are now signed in and can access protected actions.");
+    // if (pendingAction) {
+    //   completeAction(pendingAction);
+    //   setPendingAction(null);
+    // } else {
+    //   setToast("You are now signed in and can access protected actions.");
+    // }
+  };
+
   return (
     <div className="min-h-screen bg-[#f8fafc] text-slate-950">
       <Sidebar
         current={current}
-        setCurrent={setCurrent}
+        // setCurrent={setCurrent}
         mobileOpen={mobileOpen}
         setMobileOpen={setMobileOpen}
       />
 
       <div className="md:pl-[292px]">
-        <Topbar
+        {/* <Topbar
           current={current}
           onOpenMenu={() => setMobileOpen(true)}
           onOpenCreate={() =>
-            openCreate(current === "ramps" ? "newOnramp" : "newEscrow")
+            requireAuth(() =>
+              openCreate(current === "ramps" ? "newOnramp" : "newEscrow")
+            )
           }
           search={search}
           setSearch={setSearch}
           filter={filter}
           setFilter={setFilter}
-        />
+        /> */}
 
+        <Topbar
+          current={current}
+          onOpenMenu={() => setMobileOpen(true)}
+          onOpenCreate={() =>
+            requireAuth(() =>
+              openCreate(current === "ramps" ? "newOnramp" : "newEscrow")
+            )
+          }
+          search={search}
+          setSearch={setSearch}
+          filter={filter}
+          setFilter={setFilter}
+          auth={auth}
+          onLogout={handleLogout}
+        />
         <main className="px-4 py-6 md:px-8 md:py-8">
           {current === "overview" && (
             <OverviewPage
@@ -3100,7 +3256,7 @@ export default function ErrandGoWebApp() {
               milestones={filteredMilestones}
               requests={filteredRequests}
               activity={activity}
-              onAction={openCreate}
+              onAction={(type) => requireAuth(() => openCreate(type))}
               onOpenDetails={openDetails}
             />
           )}
@@ -3108,9 +3264,13 @@ export default function ErrandGoWebApp() {
           {current === "escrow" && (
             <EscrowPage
               escrows={filteredEscrows}
-              onAction={openCreate}
-              onConfirmReceipt={handleConfirmReceipt}
-              onAdvanceEscrow={handleAdvanceEscrow}
+              onAction={(type) => requireAuth(() => openCreate(type))}
+              onConfirmReceipt={(id) =>
+                requireAuth(() => handleConfirmReceipt(id))
+              }
+              onAdvanceEscrow={(id) =>
+                requireAuth(() => handleAdvanceEscrow(id))
+              }
               onOpenDetails={openDetails}
             />
           )}
@@ -3118,8 +3278,8 @@ export default function ErrandGoWebApp() {
           {current === "trades" && (
             <TradesPage
               trades={filteredTrades}
-              onAction={openCreate}
-              onAdvanceTrade={handleAdvanceTrade}
+              onAction={(type) => requireAuth(() => openCreate(type))}
+              onAdvanceTrade={(id) => requireAuth(() => handleAdvanceTrade(id))}
               onOpenDetails={openDetails}
             />
           )}
@@ -3127,8 +3287,10 @@ export default function ErrandGoWebApp() {
           {current === "milestones" && (
             <MilestonesPage
               milestones={filteredMilestones}
-              onAction={openCreate}
-              onReleaseMilestone={handleReleaseMilestone}
+              onAction={(type) => requireAuth(() => openCreate(type))}
+              onReleaseMilestone={(id) =>
+                requireAuth(() => handleReleaseMilestone(id))
+              }
               onOpenDetails={openDetails}
             />
           )}
@@ -3136,8 +3298,10 @@ export default function ErrandGoWebApp() {
           {current === "payments" && (
             <PaymentsPage
               payments={filteredPayments}
-              onAction={openCreate}
-              onAdvancePayment={handleAdvancePayment}
+              onAction={(type) => requireAuth(() => openCreate(type))}
+              onAdvancePayment={(id) =>
+                requireAuth(() => handleAdvancePayment(id))
+              }
               onOpenDetails={openDetails}
             />
           )}
@@ -3146,8 +3310,8 @@ export default function ErrandGoWebApp() {
             <RampPage
               rampAccounts={rampAccounts}
               rampFlows={filteredRampFlows}
-              onAction={openCreate}
-              onAdvanceRamp={handleAdvanceRamp}
+              onAction={(type) => requireAuth(() => openCreate(type))}
+              onAdvanceRamp={(id) => requireAuth(() => handleAdvanceRamp(id))}
               onOpenDetails={openDetails}
             />
           )}
@@ -3155,8 +3319,10 @@ export default function ErrandGoWebApp() {
           {current === "requests" && (
             <RequestsPage
               requests={filteredRequests}
-              onAction={openCreate}
-              onAdvanceRequest={handleAdvanceRequest}
+              onAction={(type) => requireAuth(() => openCreate(type))}
+              onAdvanceRequest={(id) =>
+                requireAuth(() => handleAdvanceRequest(id))
+              }
               onOpenDetails={openDetails}
             />
           )}
@@ -3175,14 +3341,24 @@ export default function ErrandGoWebApp() {
               requests={requests}
               rampFlows={rampFlows}
               onBack={closeDetails}
-              onOpenCreate={openCreate}
-              onAdvanceEscrow={handleAdvanceEscrow}
-              onConfirmReceipt={handleConfirmReceipt}
-              onAdvanceTrade={handleAdvanceTrade}
-              onReleaseMilestone={handleReleaseMilestone}
-              onAdvancePayment={handleAdvancePayment}
-              onAdvanceRequest={handleAdvanceRequest}
-              onAdvanceRamp={handleAdvanceRamp}
+              onOpenCreate={(type) => requireAuth(() => openCreate(type))}
+              onAdvanceEscrow={(id) =>
+                requireAuth(() => handleAdvanceEscrow(id))
+              }
+              onConfirmReceipt={(id) =>
+                requireAuth(() => handleConfirmReceipt(id))
+              }
+              onAdvanceTrade={(id) => requireAuth(() => handleAdvanceTrade(id))}
+              onReleaseMilestone={(id) =>
+                requireAuth(() => handleReleaseMilestone(id))
+              }
+              onAdvancePayment={(id) =>
+                requireAuth(() => handleAdvancePayment(id))
+              }
+              onAdvanceRequest={(id) =>
+                requireAuth(() => handleAdvanceRequest(id))
+              }
+              onAdvanceRamp={(id) => requireAuth(() => handleAdvanceRamp(id))}
             />
           )}
         </main>
@@ -3193,6 +3369,14 @@ export default function ErrandGoWebApp() {
         onClose={() => setModalOpen(false)}
         type={modalType}
         onCreate={handleCreate}
+      />
+
+      <Outlet
+        context={{
+          onAuthSuccess: handleAuthSuccess,
+          onAuthClose: handleAuthClose,
+          onLogin: handleLogin,
+        }}
       />
 
       <Toast message={toast} onClose={() => setToast("")} />
