@@ -7,6 +7,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useNavigate } from "react-router";
+import { useStates } from "@/contexts/StatesContext";
 
 type LoginMethod = "wallet" | "google" | "email";
 
@@ -20,6 +21,7 @@ type AuthOutletContext = {
 };
 
 export default function GetStartedModal() {
+  const { setWalletKitIsOpen } = useStates();
   const { onAuthSuccess, onAuthClose, onLogin } =
     useOutletContext<AuthOutletContext>();
   const [email, setEmail] = useState("hello@errandgo.app");
@@ -102,7 +104,8 @@ export default function GetStartedModal() {
                     className="h-12 justify-start rounded-2xl border-slate-200 bg-white text-slate-900 hover:bg-slate-50"
                     onClick={() => {
                       simulate("wallet");
-                      onAuthSuccess();
+                      setWalletKitIsOpen(true);
+                      // onAuthSuccess();
                     }}
                   >
                     <img
